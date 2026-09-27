@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from openai import OpenAI
+from google import genai
 
 load_dotenv()
 
@@ -34,7 +34,8 @@ def home():
     return {
         "app": "Voxis AI",
         "status": "running",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "ai": "Gemini"
     }
 
 
@@ -55,34 +56,22 @@ def chat(data: ChatRequest):
             "reply": "Please say something."
         }
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
         return {
-            "reply": "Voxis AI is not connected to its AI service yet."
+            "reply": "Voxis AI is not connected to Gemini yet."
         }
 
     try:
-        client = OpenAI(api_key=api_key)
+        client = genai.Client(api_key=api_key)
 
-        response = client.responses.create(
-            model="gpt-5.6-luna",
-            input=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are Voxis AI, a helpful, friendly and concise "
-                        "AI assistant. Answer clearly and naturally."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ]
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=message
         )
 
-        reply = response.output_text
+        reply = response.text
 
     except Exception as e:
         return {
@@ -106,4 +95,4 @@ def chat(data: ChatRequest):
 def get_memory():
     return {
         "memory": memory
-}
+    }
